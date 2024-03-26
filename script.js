@@ -1,50 +1,63 @@
-//your JS code here. If required.
-document.addEventListener('DOMContentLoaded', () => {
-    const items = document.querySelectorAll('.item');
-    const dropZones = document.querySelectorAll('.drop-zone');
+document.addEventListener("DOMContentLoaded", function() {
+    const items = document.querySelectorAll(".item");
+    const dropZones = document.querySelectorAll(".drop-zone");
 
-    // Add dragstart event listener to each item
     items.forEach(item => {
-        item.addEventListener('dragstart', () => {
-            item.classList.add('dragging');
-        });
+        item.addEventListener("dragstart", handleDragStart);
+        item.addEventListener("dragend", handleDragEnd);
+        item.addEventListener("dblclick", handleDoubleClick);
     });
 
-    // Add dragend event listener to each item
-    items.forEach(item => {
-        item.addEventListener('dragend', () => {
-            item.classList.remove('dragging');
-        });
-    });
-
-    // Add dragover event listener to each drop zone to allow items to be dropped on it
     dropZones.forEach(dropZone => {
-        dropZone.addEventListener('dragover', e => {
-            e.preventDefault();
-        });
+        dropZone.addEventListener("dragover", handleDragOver);
+        dropZone.addEventListener("drop", handleDrop);
     });
 
-    // Add drop event listener to each drop zone
-    dropZones.forEach(dropZone => {
-        dropZone.addEventListener('drop', e => {
-            const draggedItem = document.querySelector('.dragging');
-            if (!draggedItem) return;
+    function handleDragStart(event) {
+        event.dataTransfer.setData("text/plain", event.target.id);
+    }
 
-            const currentDropZone = draggedItem.parentElement;
-            if (dropZone === currentDropZone) return; // If dropped in the same drop zone, do nothing
+    function handleDragEnd(event) {
+        // Remove any drop zone highlights
+        dropZones.forEach(dropZone => dropZone.classList.remove("highlight"));
+    }
 
-            dropZone.appendChild(draggedItem);
-        });
-    });
+    function handleDragOver(event) {
+        event.preventDefault(); // Necessary to allow dropping
+        event.dataTransfer.dropEffect = "move"; // Set cursor style
 
-    // Add double click event listener to each item to move it to the unranked section
-    items.forEach(item => {
-        item.addEventListener('dblclick', () => {
-            const unrankedDropZone = document.getElementById('unranked-drop-zone');
-            const currentDropZone = item.parentElement;
-            if (currentDropZone === unrankedDropZone) return; // If already in unranked section, do nothing
+        // Add highlight to drop zone when item is dragged over
+        this.classList.add("highlight");
+    }
 
-            unrankedDropZone.appendChild(item);
-        });
-    });
+    function handleDrop(event) {
+        event.preventDefault(); // Prevent default action (open as link for some elements)
+
+        const itemId = event.dataTransfer.getData("text/plain");
+        const item = document.getElementById(itemId);
+        const dropZone = this;
+
+        // Remove highlight from drop zone
+        dropZones.forEach(dropZone => dropZone.classList.remove("highlight"));
+
+        // Check if the item is being dropped onto its current drop zone
+        if (!dropZone.contains(item)) {
+            // Append item to drop zone
+            dropZone.appendChild(item);
+        }
+    }
+
+    function handleDoubleClick(event) {
+        const item = event.target;
+        const unrankedDropZone = document.getElementById("unranked-drop-zone");
+
+        // Check if the item is in the unranked drop zone
+        if (item.parentElement === unrankedDropZone) {
+            // Do nothing if already in the unranked drop zone
+            return;
+        }
+
+        // Append item to unranked drop zone
+        unrankedDropZone.appendChild(item);
+    }
 });
